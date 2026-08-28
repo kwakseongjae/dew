@@ -37,7 +37,7 @@ Open `http://127.0.0.1:43133/?sample=1&shot=1` for a clearly labeled **sample la
 - `/?orbshot=1&morph=1&shot=1` — mid-morph clay stretch (circle becoming !)
 - `/?orbshot=1&shot=1&done=1` or `/?sample=1&orbshot=1&shot=1` — settled bang
 
-The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is a squircle; done interpolates a 16-point silhouette into a fused bang (capsule + dot, polynomial smooth-min). `prefers-reduced-motion` skips spin/wobble and uses a short morph.
+The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is a pale-mint frost drop with clay harmonics (not a perfect disc). Done interpolates a 32-point silhouette into a fused bang (capsule + dot, polynomial smooth-min) — the body morphs; nothing swaps in a glyph. `prefers-reduced-motion` skips spin/wobble and uses a short morph.
 
 Settings → **Dewdrop** (saved like followed tools):
 

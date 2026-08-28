@@ -203,8 +203,8 @@ export const Dewdrop = ({
         lookX.pos = lookTx;
         lookY.pos = lookTy;
         morph.pos = morphGoal;
-        bounce.pos = morphGoal > 0.85 ? 1 : 1;
-        spin.pos = freezeMorph != null ? 0.32 * Math.sin(freezeMorph * Math.PI) : 0;
+        bounce.pos = 1;
+        spin.pos = freezeMorph != null && freezeMorph < 0.95 ? 0.22 * Math.sin(freezeMorph * Math.PI) : 0;
       }
 
       if (!frozen && !reduced && lookNow.playfulness !== "off") {
@@ -226,14 +226,22 @@ export const Dewdrop = ({
       }
 
       const clay = !reduced;
-      const radii = mixRadii(IDLE_RADII, BANG_RADII, morph.pos, clay);
+      const baseRadii = mixRadii(IDLE_RADII, BANG_RADII, morph.pos, clay);
+      const radii =
+        morph.pos < 0.2 && wobbleOn && !frozen
+          ? baseRadii.map((radius, i) => {
+              const a = (i / baseRadii.length) * Math.PI * 2;
+              return radius * (1 + 0.042 * Math.sin(elapsed / 520 + a * 3) + 0.022 * Math.cos(elapsed / 740 + a * 5));
+            })
+          : baseRadii;
       const maxR = radii.reduce((m, r) => Math.max(m, r), 0.72);
       const blobPx = Math.min(cssW, cssH);
-      const pxPerUnit = (blobPx * 0.42) / maxR;
-      const leanTwist = morph.pos < 0.25 ? leanX.pos * 0.42 : 0;
-      const twist = reduced ? 0 : Math.sin(morph.pos * Math.PI) * 0.42 + spin.pos + leanTwist;
+      const pxPerUnit = (blobPx * 0.5) / maxR;
+      const leanTwist = morph.pos < 0.25 ? leanX.pos * 0.38 : 0;
+      const morphTwist = reduced ? 0 : Math.sin(morph.pos * Math.PI) * 0.28;
+      const twist = morphTwist + spin.pos + leanTwist;
       const speedAngle = Math.atan2(leanY.vel + leanY.pos, leanX.vel + leanX.pos || 0.0001);
-      const squashAmt = frozen && freezeLean ? 0.12 : squash.pos;
+      const squashAmt = frozen && freezeLean ? 0.055 : squash.pos;
       const sx = 1 + Math.cos(speedAngle) * squashAmt - Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
       const sy = 1 - Math.cos(speedAngle) * squashAmt + Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
 
