@@ -41,7 +41,7 @@ export const Orb = ({
   const flags = readQueryFlags();
   const freeze = flags.shot;
   const settledBang = Boolean(doneGroup) || flags.doneExplicit;
-  const freezeMorph = flags.morph ? 0.56 : freeze ? (settledBang ? 1 : 0) : null;
+  const freezeMorph = flags.morph ? 0.52 : freeze ? (settledBang ? 1 : 0) : null;
   const freezeLean = flags.lean ? { x: 0.42, y: -0.2 } : null;
   const morphTarget = settledBang ? 1 : 0;
 
