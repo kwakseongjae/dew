@@ -12,6 +12,15 @@ type DesktopPreviewProps = {
 
 const DEFAULT_INSET = 28;
 
+export const OrbShot = () => {
+  const dew = useDew();
+  return (
+    <div className="orb-shot-stage grid min-h-screen w-screen place-items-center">
+      <Orb snapshot={dew.snapshot} settings={dew.settings} dragMode="none" />
+    </div>
+  );
+};
+
 export const DesktopPreview = ({ shot = false, demo = false }: DesktopPreviewProps) => {
   const dew = useDew();
   const stageRef = useRef<HTMLDivElement>(null);

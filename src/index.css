@@ -81,8 +81,11 @@ body.browser-preview {
 
 .sky-backdrop {
   background:
-    radial-gradient(1200px 500px at 20% 10%, rgba(255, 255, 255, 0.55), transparent 55%),
-    radial-gradient(900px 420px at 80% 0%, rgba(190, 230, 255, 0.7), transparent 50%),
-    radial-gradient(700px 380px at 70% 80%, rgba(255, 255, 255, 0.35), transparent 45%),
-    linear-gradient(180deg, #7eb8ea 0%, #b9d7ee 42%, #e7f3fb 100%);
+    radial-gradient(900px 480px at 16% 8%, rgba(92, 148, 196, 0.38), transparent 58%),
+    radial-gradient(720px 380px at 88% 14%, rgba(48, 96, 128, 0.35), transparent 52%),
+    linear-gradient(180deg, #1c3a5c 0%, #163044 48%, #0f2438 100%);
+}
+
+.orb-shot-stage {
+  background: #163044;
 }

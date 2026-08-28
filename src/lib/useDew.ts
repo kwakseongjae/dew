@@ -30,7 +30,7 @@ export const readQueryFlags = (): QueryFlags => {
   const params = new URLSearchParams(window.location.search);
   return {
     sample: params.get("sample") === "1",
-    done: params.get("done") !== "0",
+    done: params.get("done") === "1" || (params.get("done") !== "0" && params.get("demo") !== "1"),
     doneExplicit: params.get("done") === "1",
     first: params.get("first") === "1",
     picker: params.get("picker") === "1",
@@ -54,7 +54,9 @@ export const useDew = () => {
   const [connecting, setConnecting] = useState(false);
 
   const sampleOn = settings.sampleLayout || browserSample;
-  const showConnect = flags.first || (!settings.onboarded && !sampleOn && !flags.settings);
+  const showConnect =
+    flags.first ||
+    (!settings.onboarded && !sampleOn && !flags.settings && !flags.demo && !flags.orbshot);
   const startInPicker = flags.picker;
   const startInSettings = flags.settings;
 

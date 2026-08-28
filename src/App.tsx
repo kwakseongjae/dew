@@ -1,4 +1,4 @@
-import { DesktopPreview } from "@/components/DesktopPreview";
+import { DesktopPreview, OrbShot } from "@/components/DesktopPreview";
 import { DewdropPlayground } from "@/components/DewdropPlayground";
 import { Orb } from "@/components/Orb";
 import { Panel } from "@/components/Panel";
@@ -50,6 +50,7 @@ const App = () => {
   }
 
   if (params.get("play") === "1") return <DewdropPlayground />;
+  if (params.get("orbshot") === "1") return <OrbShot />;
 
   return <DesktopPreview shot={shot} demo={params.get("demo") === "1"} />;
 };
