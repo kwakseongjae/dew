@@ -1,0 +1,7 @@
+{
+  "name": "dew",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Always-on desktop companion for local coding agents",
+  "type": "module"
+}
