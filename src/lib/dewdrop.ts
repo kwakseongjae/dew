@@ -66,13 +66,6 @@ export const smoothstep = (t: number): number => {
   return x * x * (3 - 2 * x);
 };
 
-/** Polynomial smooth-min (Inigo Quilez). */
-export const smin = (a: number, b: number, k: number): number => {
-  if (k <= 0) return Math.min(a, b);
-  const h = clamp(0.5 + (0.5 * (b - a)) / k, 0, 1);
-  return lerp(b, a, h) - k * h * (1 - h);
-};
-
 export const sdCircle = (x: number, y: number, radius: number): number => Math.hypot(x, y) - radius;
 
 export const sdCapsule = (
@@ -109,16 +102,11 @@ export const idleSdf = (x: number, y: number, character: DewdropCharacter = "dro
   return Math.hypot(x * 0.97, y * 1.08) - radius;
 };
 
-/**
- * Bang origin sits in the fused neck so polar rays stay star-convex:
- * long up a thin stem, short through the pinch, rounder fused dot below.
- * Tuned to read as ! at 64px — not a peanut or hourglass.
- */
-export const bangSdf = (x: number, y: number): number => {
-  const stem = sdCapsule(x, y, 0, -0.14, 0, -0.86, 0.13);
-  const dot = sdCircle(x, y - 0.32, 0.24);
-  return smin(stem, dot, 0.22);
-};
+/** Stem of a typed ! — its own capsule. Never unioned with the dot. */
+export const stemSdf = (x: number, y: number): number => sdCapsule(x, y, 0, -0.4, 0, 0.4, 0.145);
+
+/** Dot of a typed ! — its own circle. */
+export const dotSdf = (x: number, y: number): number => sdCircle(x, y, 0.185);
 
 export const sampleRadii = (sdf: (x: number, y: number) => number, points = POINT_COUNT): number[] => {
   const radii: number[] = [];
@@ -156,7 +144,25 @@ export const IDLE_RADII: Record<DewdropCharacter, number[]> = {
   plump: sampleRadii((x, y) => idleSdf(x, y, "plump")),
   tall: sampleRadii((x, y) => idleSdf(x, y, "tall")),
 };
-export const BANG_RADII = sampleRadii(bangSdf);
+export const STEM_RADII = sampleRadii(stemSdf);
+export const DOT_RADII = sampleRadii(dotSdf);
+
+/** Settled stem center (up) and dot center (down), same units as polar radii. */
+export const BANG_STEM_OY = -0.54;
+export const BANG_DOT_OY = 0.56;
+/** Morph value where one pebble becomes two bodies. */
+export const SPLIT_AT = 0.24;
+
+export type DewdropBody = {
+  radii: number[];
+  x: number;
+  y: number;
+};
+
+export type DewdropPose = {
+  bodies: DewdropBody[];
+  showFace: boolean;
+};
 
 export const mixRadii = (from: number[], to: number[], t: number, clay: boolean): number[] => {
   const ease = smoothstep(t);
@@ -170,6 +176,112 @@ export const mixRadii = (from: number[], to: number[], t: number, clay: boolean)
     const y = Math.sin(angle) * mixed * sy;
     return Math.hypot(x, y);
   });
+};
+
+const scaleRadii = (radii: number[], scale: number): number[] => radii.map((radius) => radius * scale);
+
+/** Lower-waist pinch on a single pebble so the split reads before two rims appear. */
+const pinchWaist = (radii: number[], amount: number): number[] => {
+  if (amount <= 0.001) return radii;
+  const n = radii.length;
+  return radii.map((radius, i) => {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const y = Math.sin(angle);
+    const waist = Math.exp(-((y - 0.22) * (y - 0.22)) / 0.11);
+    return radius * (1 - amount * 0.28 * waist);
+  });
+};
+
+const bodyExtentY = (radii: number[]): { min: number; max: number } => {
+  let min = Infinity;
+  let max = -Infinity;
+  const n = radii.length;
+  for (let i = 0; i < n; i += 1) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const y = Math.sin(angle) * (radii[i] ?? 0);
+    min = Math.min(min, y);
+    max = Math.max(max, y);
+  }
+  return { min, max };
+};
+
+/**
+ * Idle is one clay pebble. As morph rises it pinches, splits into stem + dot
+ * (two separate glass fills — never an SDF union), then the reverse path
+ * rejoins them. Settled pose is a typed ! with a clear gap.
+ */
+export const dewdropPose = (morph: number, character: DewdropCharacter, clay: boolean): DewdropPose => {
+  const idle = IDLE_RADII[character] ?? IDLE_RADII.drop;
+  const t = clamp(morph, 0, 1);
+
+  if (t < SPLIT_AT) {
+    const pinch = smoothstep(t / SPLIT_AT);
+    const pinched = pinchWaist(mixRadii(idle, STEM_RADII, pinch * 0.34, clay), pinch);
+    return {
+      bodies: [{ radii: pinched, x: 0, y: 0 }],
+      showFace: t < 0.16,
+    };
+  }
+
+  const u = clamp((t - SPLIT_AT) / (1 - SPLIT_AT), 0, 1);
+  const reshape = smoothstep(u);
+  const apart = smoothstep(Math.pow(u, 0.55));
+  const stemFrom = scaleRadii(idle, 0.52);
+  const dotFrom = scaleRadii(idle, 0.38);
+  return {
+    bodies: [
+      {
+        radii: mixRadii(stemFrom, STEM_RADII, lerp(0.2, 1, reshape), false),
+        x: 0,
+        y: lerp(-0.2, BANG_STEM_OY, apart),
+      },
+      {
+        radii: mixRadii(dotFrom, DOT_RADII, lerp(0.28, 1, reshape), false),
+        x: 0,
+        y: lerp(0.34, BANG_DOT_OY, apart),
+      },
+    ],
+    showFace: false,
+  };
+};
+
+export const poseGap = (pose: DewdropPose): number => {
+  if (pose.bodies.length < 2) return 0;
+  const stem = pose.bodies[0]!;
+  const dot = pose.bodies[1]!;
+  const stemY = bodyExtentY(stem.radii);
+  const dotY = bodyExtentY(dot.radii);
+  return dot.y + dotY.min - (stem.y + stemY.max);
+};
+
+export const fitPose = (
+  pose: DewdropPose,
+  cssW: number,
+  cssH: number,
+): { pxPerUnit: number; midX: number; midY: number } => {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const body of pose.bodies) {
+    const n = body.radii.length;
+    for (let i = 0; i < n; i += 1) {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const radius = body.radii[i] ?? 0;
+      const x = body.x + Math.cos(angle) * radius;
+      const y = body.y + Math.sin(angle) * radius;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  const span = Math.max(maxX - minX, maxY - minY, 0.7);
+  return {
+    pxPerUnit: (Math.min(cssW, cssH) * 0.84) / span,
+    midX: (minX + maxX) * 0.5,
+    midY: (minY + maxY) * 0.5,
+  };
 };
 
 export const stepSpring = (
@@ -256,6 +368,9 @@ export type DewdropPaint = {
   face: DewdropFace;
   mint: DewdropMint;
   live: boolean;
+  showFace?: boolean;
+  /** Downward blob shadow. Off for the stem so it cannot fill the ! gap. */
+  castShadow?: boolean;
 };
 
 export const paintDewdrop = (ctx: CanvasRenderingContext2D, paint: DewdropPaint): void => {
@@ -269,9 +384,11 @@ export const paintDewdrop = (ctx: CanvasRenderingContext2D, paint: DewdropPaint)
   ctx.scale(paint.squashX * scale, paint.squashY * scale);
 
   ctx.save();
-  ctx.shadowColor = "rgba(12, 28, 48, 0.18)";
-  ctx.shadowBlur = u * 0.42;
-  ctx.shadowOffsetY = u * 0.16;
+  if (paint.castShadow !== false) {
+    ctx.shadowColor = "rgba(8, 18, 32, 0.3)";
+    ctx.shadowBlur = Math.min(5.5, u * 0.16);
+    ctx.shadowOffsetY = Math.min(2.4, u * 0.07);
+  }
   const body = ctx.createRadialGradient(-u * 0.22, -u * 0.38, u * 0.06, 0, u * 0.12, u * 1.05);
   body.addColorStop(0, colors.top);
   body.addColorStop(0.42, colors.mid);
@@ -303,11 +420,12 @@ export const paintDewdrop = (ctx: CanvasRenderingContext2D, paint: DewdropPaint)
   ctx.restore();
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
-  ctx.lineWidth = Math.max(1.05, u * (paint.morph > 0.55 ? 0.026 : 0.036));
+  ctx.lineWidth = Math.max(1.15, u * 0.038);
   ctx.lineJoin = "round";
   ctx.stroke(path);
 
-  const faceOpacity = clamp(1 - paint.morph * 1.85, 0, 1);
+  const faceOpacity =
+    paint.showFace === false ? 0 : clamp(1 - paint.morph * 1.85, 0, 1);
   if (faceOpacity > 0.04) {
     ctx.save();
     ctx.globalAlpha = faceOpacity;

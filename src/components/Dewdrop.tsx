@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import {
-  BANG_RADII,
-  IDLE_RADII,
-  mixRadii,
+  dewdropPose,
+  fitPose,
   paintDewdrop,
   stepSpring,
   type DewdropLook,
+  type DewdropPose,
   type Spring,
 } from "@/lib/dewdrop";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,49 @@ type DewdropProps = {
 
 const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const paintPose = (
+  ctx: CanvasRenderingContext2D,
+  pose: DewdropPose,
+  origin: { x: number; y: number },
+  unit: number,
+  extras: {
+    twist: number;
+    sx: number;
+    sy: number;
+    bounce: number;
+    lookX: number;
+    lookY: number;
+    blink: number;
+    morph: number;
+    face: DewdropLook["face"];
+    mint: DewdropLook["mint"];
+    live: boolean;
+  },
+): void => {
+  const split = pose.bodies.length > 1;
+  pose.bodies.forEach((body, index) => {
+    paintDewdrop(ctx, {
+      radii: body.radii,
+      cx: origin.x + body.x * unit,
+      cy: origin.y + body.y * unit,
+      pxPerUnit: unit,
+      rotate: extras.twist,
+      squashX: extras.sx,
+      squashY: extras.sy,
+      bounce: extras.bounce,
+      lookX: extras.lookX,
+      lookY: extras.lookY,
+      blink: extras.blink,
+      morph: extras.morph,
+      face: extras.face,
+      mint: extras.mint,
+      live: extras.live,
+      showFace: pose.showFace && !split && index === 0,
+      castShadow: !split || index === 1,
+    });
+  });
+};
 
 export const Dewdrop = ({
   look,
@@ -75,8 +118,11 @@ export const Dewdrop = ({
     const lookX: Spring = { pos: freezeLean?.x ?? 0, vel: 0 };
     const lookY: Spring = { pos: freezeLean?.y ?? 0, vel: 0 };
     const morph: Spring = { pos: freezeMorph ?? (freeze ? morphTargetRef.current : 0), vel: 0 };
-    const bounce: Spring = { pos: 1, vel: freezeMorph === 1 || morphTargetRef.current >= 1 ? 0 : 0 };
-    const spin: Spring = { pos: freezeMorph != null ? 0.28 * Math.sin((freezeMorph ?? 0) * Math.PI) : 0, vel: 0 };
+    const bounce: Spring = { pos: 1, vel: 0 };
+    const spin: Spring = {
+      pos: freezeMorph != null ? 0.12 * Math.sin((freezeMorph ?? 0) * Math.PI) : 0,
+      vel: 0,
+    };
     const squash: Spring = { pos: 0, vel: 0 };
     const followX: Spring = { pos: 0, vel: 0 };
     const followY: Spring = { pos: 0, vel: 0 };
@@ -204,7 +250,7 @@ export const Dewdrop = ({
         lookY.pos = lookTy;
         morph.pos = morphGoal;
         bounce.pos = 1;
-        spin.pos = freezeMorph != null && freezeMorph < 0.95 ? 0.22 * Math.sin(freezeMorph * Math.PI) : 0;
+        spin.pos = 0;
       }
 
       if (!frozen && !reduced && lookNow.playfulness !== "off") {
@@ -225,26 +271,31 @@ export const Dewdrop = ({
         blink = 0;
       }
 
-      const idle = IDLE_RADII[lookNow.character] ?? IDLE_RADII.drop;
       const clay = !reduced;
-      const baseRadii = mixRadii(idle, BANG_RADII, morph.pos, clay);
-      const radii =
-        morph.pos < 0.2 && wobbleOn && !frozen
-          ? baseRadii.map((radius, i) => {
-              const a = (i / baseRadii.length) * Math.PI * 2;
-              return radius * (1 + 0.042 * Math.sin(elapsed / 520 + a * 3) + 0.022 * Math.cos(elapsed / 740 + a * 5));
-            })
-          : baseRadii;
-      const maxR = radii.reduce((m, r) => Math.max(m, r), 0.72);
-      const blobPx = Math.min(cssW, cssH);
-      const pxPerUnit = (blobPx * 0.5) / maxR;
-      const leanTwist = morph.pos < 0.25 ? leanX.pos * 0.38 : 0;
-      const morphTwist = reduced ? 0 : Math.sin(morph.pos * Math.PI) * 0.28;
-      const twist = morphTwist + spin.pos + leanTwist;
+      const pose = dewdropPose(morph.pos, lookNow.character, clay);
+      if (pose.bodies.length === 1 && morph.pos < 0.2 && wobbleOn && !frozen) {
+        pose.bodies[0]!.radii = pose.bodies[0]!.radii.map((radius, i) => {
+          const a = (i / pose.bodies[0]!.radii.length) * Math.PI * 2;
+          return radius * (1 + 0.042 * Math.sin(elapsed / 520 + a * 3) + 0.022 * Math.cos(elapsed / 740 + a * 5));
+        });
+      }
+
+      const fitted = fitPose(pose, cssW, cssH);
+      const unit = fitted.pxPerUnit;
+      const split = pose.bodies.length > 1;
+      const leanTwist = split || morph.pos > 0.25 ? 0 : leanX.pos * 0.38;
+      const morphTwist = reduced || split ? 0 : Math.sin(morph.pos * Math.PI) * 0.18;
+      const twist = split ? 0 : morphTwist + spin.pos + leanTwist;
       const speedAngle = Math.atan2(leanY.vel + leanY.pos, leanX.vel + leanX.pos || 0.0001);
-      const squashAmt = frozen && freezeLean ? 0.055 : squash.pos;
-      const sx = 1 + Math.cos(speedAngle) * squashAmt - Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
-      const sy = 1 - Math.cos(speedAngle) * squashAmt + Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
+      const squashAmt = split ? 0 : frozen && freezeLean ? 0.055 : squash.pos;
+      const sx =
+        1 +
+        Math.cos(speedAngle) * squashAmt -
+        Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
+      const sy =
+        1 -
+        Math.cos(speedAngle) * squashAmt +
+        Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
 
       if (followRef.current && !frozen) {
         const tx = pointer.current.x * (cssW * 0.28);
@@ -255,39 +306,21 @@ export const Dewdrop = ({
         Object.assign(trailY, stepSpring(trailY, followY.pos, dt, 0.08, 0.72));
       }
 
-      const cx = cssW / 2 + (followRef.current ? followX.pos : leanX.pos * blobPx * 0.16);
-      const cy = cssH / 2 + (followRef.current ? followY.pos : leanY.pos * blobPx * 0.14);
+      const origin = {
+        x:
+          cssW / 2 -
+          fitted.midX * unit +
+          (followRef.current ? followX.pos : leanX.pos * Math.min(cssW, cssH) * 0.16),
+        y:
+          cssH / 2 -
+          fitted.midY * unit +
+          (followRef.current ? followY.pos : leanY.pos * Math.min(cssW, cssH) * 0.14),
+      };
 
-      if (followRef.current && lookNow.playfulness === "playful" && !reduced) {
-        ctx.globalAlpha = 0.28;
-        paintDewdrop(ctx, {
-          radii,
-          cx: cssW / 2 + trailX.pos,
-          cy: cssH / 2 + trailY.pos,
-          pxPerUnit: pxPerUnit * 0.78,
-          rotate: twist * 0.6,
-          squashX: sx,
-          squashY: sy,
-          bounce: bounce.pos,
-          lookX: lookX.pos,
-          lookY: lookY.pos,
-          blink,
-          morph: morph.pos,
-          face: lookNow.face,
-          mint: lookNow.mint,
-          live: moodRef.current === "live",
-        });
-        ctx.globalAlpha = 1;
-      }
-
-      paintDewdrop(ctx, {
-        radii,
-        cx,
-        cy,
-        pxPerUnit,
-        rotate: twist,
-        squashX: sx,
-        squashY: sy,
+      const extras = {
+        twist,
+        sx,
+        sy,
         bounce: bounce.pos,
         lookX: lookX.pos,
         lookY: lookY.pos,
@@ -296,7 +329,21 @@ export const Dewdrop = ({
         face: lookNow.face,
         mint: lookNow.mint,
         live: moodRef.current === "live",
-      });
+      };
+
+      if (followRef.current && lookNow.playfulness === "playful" && !reduced) {
+        ctx.globalAlpha = 0.28;
+        paintPose(
+          ctx,
+          pose,
+          { x: cssW / 2 - fitted.midX * unit + trailX.pos, y: cssH / 2 - fitted.midY * unit + trailY.pos },
+          unit * 0.78,
+          extras,
+        );
+        ctx.globalAlpha = 1;
+      }
+
+      paintPose(ctx, pose, origin, unit, extras);
 
       if (frozen) return;
       raf = window.requestAnimationFrame(tick);
@@ -304,12 +351,12 @@ export const Dewdrop = ({
 
     const resize = (): void => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const w = wrap.clientWidth || sizeRef.current;
-      const h = wrap.clientHeight || sizeRef.current;
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
+      const width = wrap.clientWidth || sizeRef.current;
+      const height = wrap.clientHeight || sizeRef.current;
+      canvas.width = Math.max(1, Math.round(width * dpr));
+      canvas.height = Math.max(1, Math.round(height * dpr));
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
       if (freezeRef.current) {
         window.cancelAnimationFrame(raf);
         raf = window.requestAnimationFrame(tick);
