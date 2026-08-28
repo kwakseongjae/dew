@@ -29,16 +29,17 @@ pnpm dev
 Open `http://127.0.0.1:43133/?demo=1` for the **real UI**: wallpaper, a **64px** dewdrop parked bottom-right, and the frost-glass card (sessions, tools, usage, settings). Add `&sample=1` for a labeled sample layout. Other flags:
 
 - `/?demo=1&sample=1` — desktop stage + sample sessions (idle clay orb)
-- `/?demo=1&sample=1&done=1` — sample sessions plus a finished row; small orb is the fused bang
-- `/?demo=1&done=1` — small orb frozen as the fused bang
+- `/?demo=1&sample=1&done=1` — sample sessions plus a finished row; small orb is a typed `!` (stem + gap + dot)
+- `/?demo=1&done=1` — small orb frozen as the split bang
 - `/?demo=1&settings=1` — settings, including the character row
 - `/?first=1&shot=1` — first-run Scan and connect
 - `/?sample=1&picker=1&shot=1` — followed-tools picker
 - `/?orbshot=1&shot=1&done=0` — frozen 64px idle orb on a navy shot stage
-- `/?orbshot=1&shot=1&done=1` — frozen 64px bang on a navy shot stage
-- `/?orbshot=1&play=1` — **debug** playground (oversized blob, not the product)
+- `/?orbshot=1&shot=1&done=1` — frozen 64px bang on a navy shot stage (stem, gap, dot)
+- `/?orbshot=1&morph=1&shot=1` — frozen mid-split (two pieces coming apart)
+- `/?orbshot=1&play=1` — **debug** playground (oversized blob, not the product). Morph toggles idle ↔ bang.
 
-The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is a clay pebble (pale mint frost, thin white rim). Done interpolates a 32-point silhouette into a fused bang (thin stem + pinch + rounder dot, polynomial smooth-min) — the body morphs; nothing swaps in a glyph. `prefers-reduced-motion` skips spin/wobble and uses a short morph.
+The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is one clay pebble (pale mint frost, thin white rim, face). Done **splits** that pebble into two glass pieces — a tall stem and a rounder dot with a visible gap — so it reads as a typed `!` at 64px. The same morph runs in reverse to rejoin. Nothing swaps in a glyph. `prefers-reduced-motion` skips spin/wobble and uses a short morph.
 
 Settings → **Dewdrop** (saved like followed tools):
 
