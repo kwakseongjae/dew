@@ -20,6 +20,7 @@ type PanelProps = {
   connecting: boolean;
   showConnect: boolean;
   startInPicker?: boolean;
+  startInSettings?: boolean;
   onSaveSettings: (next: Settings) => Promise<void>;
   onToggleSample: (on: boolean) => void;
   onConnect: () => Promise<void>;
@@ -38,6 +39,7 @@ export const Panel = ({
   connecting,
   showConnect,
   startInPicker = false,
+  startInSettings = false,
   onSaveSettings,
   onToggleSample,
   onConnect,
@@ -45,8 +47,8 @@ export const Panel = ({
   onRescan,
   onClose,
 }: PanelProps) => {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(startInPicker);
+  const [settingsOpen, setSettingsOpen] = useState(startInSettings);
+  const [pickerOpen, setPickerOpen] = useState(startInPicker && !startInSettings);
 
   const handleFocus = (id: string) => {
     void focusAgent(id);
@@ -100,7 +102,10 @@ export const Panel = ({
 
   return (
     <section
-      className="glass-card relative flex h-[308px] w-[848px] flex-col rounded-[28px] p-5 text-white"
+      className={cn(
+        "glass-card relative flex w-[848px] flex-col rounded-[28px] p-5 text-white",
+        overlay === "settings" ? "h-[400px]" : "h-[308px]",
+      )}
       onMouseEnter={handlePointerEnter}
       onMouseLeave={handlePointerLeave}
       onKeyDown={handleKeyDown}
@@ -134,6 +139,7 @@ export const Panel = ({
             scanning={connecting}
             error={error}
             inTauri={inTauri}
+            look={settings}
             onConnect={handleConnect}
           />
         </div>

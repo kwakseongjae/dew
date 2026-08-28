@@ -1,24 +1,24 @@
 import { LoaderCircle } from "lucide-react";
 import { Dewdrop } from "@/components/Dewdrop";
 import { Button } from "@/components/ui/button";
+import { lookFromSettings, type DewdropLook } from "@/lib/dewdrop";
 
 type ConnectPaneProps = {
   scanning: boolean;
   error: string | null;
   inTauri: boolean;
+  look?: DewdropLook;
   onConnect: () => Promise<void>;
 };
 
-export const ConnectPane = ({ scanning, error, inTauri, onConnect }: ConnectPaneProps) => {
+export const ConnectPane = ({ scanning, error, inTauri, look, onConnect }: ConnectPaneProps) => {
   const handleConnect = () => {
     void onConnect();
   };
 
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <div className="glass-card grid size-[84px] place-items-center rounded-full">
-        <Dewdrop mood={scanning ? "live" : "idle"} className="size-14" />
-      </div>
+      <Dewdrop look={lookFromSettings(look)} mood={scanning ? "live" : "idle"} size={64} />
       <h1 className="mt-4 text-[28px] font-semibold leading-none tracking-tight">Dew</h1>
       <p className="mt-3 max-w-[420px] text-[15px] leading-6 text-white/85">
         Tap once to find coding agents already on this machine and connect them.

@@ -44,6 +44,7 @@ export const DesktopPreview = ({ shot = false }: DesktopPreviewProps) => {
             connecting={dew.connecting}
             showConnect={dew.showConnect}
             startInPicker={dew.startInPicker}
+            startInSettings={dew.startInSettings}
             onSaveSettings={dew.saveSettings}
             onToggleSample={handleToggleSample}
             onConnect={dew.connect}

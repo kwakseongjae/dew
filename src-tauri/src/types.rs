@@ -91,6 +91,30 @@ pub struct Settings {
     pub onboarded: bool,
     #[serde(default)]
     pub followed_tools: Vec<String>,
+    #[serde(default = "default_true")]
+    pub look_at_cursor: bool,
+    #[serde(default = "default_playfulness")]
+    pub playfulness: String,
+    #[serde(default = "default_face")]
+    pub face: String,
+    #[serde(default = "default_mint")]
+    pub mint: String,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_playfulness() -> String {
+    "playful".into()
+}
+
+fn default_face() -> String {
+    "dots".into()
+}
+
+fn default_mint() -> String {
+    "pale".into()
 }
 
 impl Default for Settings {
@@ -106,7 +130,33 @@ impl Default for Settings {
             autostart: true,
             onboarded: false,
             followed_tools: Vec::new(),
+            look_at_cursor: true,
+            playfulness: default_playfulness(),
+            face: default_face(),
+            mint: default_mint(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Settings;
+
+    #[test]
+    fn dewdrop_fields_default_when_missing() {
+        let raw = r#"{
+            "openMode":"click",
+            "shortcut":"CommandOrControl+Shift+D",
+            "orbVisible":true,
+            "usagePeriod":"weekly",
+            "sampleLayout":false,
+            "autostart":true
+        }"#;
+        let settings: Settings = serde_json::from_str(raw).expect("old settings json");
+        assert!(settings.look_at_cursor);
+        assert_eq!(settings.playfulness, "playful");
+        assert_eq!(settings.face, "dots");
+        assert_eq!(settings.mint, "pale");
     }
 }
 

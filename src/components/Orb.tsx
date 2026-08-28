@@ -7,6 +7,8 @@ import {
   startOrbDrag,
   togglePanel,
 } from "@/lib/bridge";
+import { lookFromSettings } from "@/lib/dewdrop";
+import { readQueryFlags } from "@/lib/useDew";
 import type { Settings, Snapshot } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +27,13 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
     .sort((a, b) => (b.finishedAtMs ?? 0) - (a.finishedAtMs ?? 0));
   const doneGroup = doneSessions[0];
   const jobs = snapshot.activeJobs;
-  const morphKey = doneGroup?.id ?? "idle";
+  const flags = readQueryFlags();
+  const freeze = flags.shot;
+  const settledBang = Boolean(doneGroup) || flags.doneExplicit;
+  const freezeMorph = flags.morph ? 0.56 : freeze ? (settledBang ? 1 : 0) : null;
+  const freezeLean =
+    flags.lean || (freeze && flags.orbshot && !flags.morph && !settledBang) ? { x: 0.62, y: -0.28 } : null;
+  const morphTarget = settledBang ? 1 : 0;
 
   const handleOpen = () => {
     if (onOpen) onOpen();
@@ -100,21 +108,20 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       className={cn(
-        "relative grid size-[72px] place-items-center rounded-full outline-none",
+        "relative grid size-[72px] place-items-center overflow-visible rounded-full bg-transparent outline-none",
         "focus-visible:ring-2 focus-visible:ring-mint",
-        doneGroup ? "dew-orb-done animate-dew-bang" : "glass-card",
       )}
     >
-      {doneGroup ? (
-        <span
-          key={morphKey}
-          className="animate-dew-bang-mark text-[34px] font-semibold leading-none text-slate-800"
-        >
-          !
-        </span>
-      ) : (
-        <Dewdrop mood={jobs > 0 ? "live" : "idle"} className="size-[52px]" />
-      )}
+      <Dewdrop
+        look={lookFromSettings(settings)}
+        mood={jobs > 0 ? "live" : "idle"}
+        size={68}
+        morphTarget={morphTarget}
+        freezeMorph={freezeMorph}
+        freezeLean={freezeLean}
+        freeze={freeze}
+        lookAtDocument={!freeze}
+      />
     </button>
   );
 };

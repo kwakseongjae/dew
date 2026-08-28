@@ -68,6 +68,10 @@ export type Settings = {
   autostart: boolean;
   onboarded: boolean;
   followedTools: string[];
+  lookAtCursor: boolean;
+  playfulness: "off" | "calm" | "playful";
+  face: "dots" | "sleepy" | "wink";
+  mint: "pale" | "mid";
 };
 
 export type ConnectResult = {
@@ -86,6 +90,10 @@ export const defaultSettings = (): Settings => ({
   autostart: true,
   onboarded: false,
   followedTools: [],
+  lookAtCursor: true,
+  playfulness: "playful",
+  face: "dots",
+  mint: "pale",
 });
 
 export const emptySnapshot = (): Snapshot => ({

@@ -1,4 +1,5 @@
 import { DesktopPreview } from "@/components/DesktopPreview";
+import { DewdropPlayground } from "@/components/DewdropPlayground";
 import { Orb } from "@/components/Orb";
 import { Panel } from "@/components/Panel";
 import { isTauri } from "@/lib/bridge";
@@ -26,6 +27,7 @@ const TauriPanel = () => {
         connecting={dew.connecting}
         showConnect={dew.showConnect}
         startInPicker={dew.startInPicker}
+        startInSettings={dew.startInSettings}
         onSaveSettings={dew.saveSettings}
         onToggleSample={handleToggleSample}
         onConnect={dew.connect}
@@ -46,6 +48,8 @@ const App = () => {
   if (!isTauri()) {
     document.body.classList.add("browser-preview");
   }
+
+  if (params.get("play") === "1") return <DewdropPlayground />;
 
   return <DesktopPreview shot={shot} />;
 };

@@ -11,12 +11,18 @@ import { applyFollowed } from "./follow";
 import { sampleSnapshot } from "./sample";
 import { defaultSettings, emptySnapshot, type Settings, type Snapshot } from "./types";
 
-type QueryFlags = {
+export type QueryFlags = {
   sample: boolean;
   done: boolean;
+  doneExplicit: boolean;
   first: boolean;
   picker: boolean;
   orbshot: boolean;
+  play: boolean;
+  morph: boolean;
+  lean: boolean;
+  settings: boolean;
+  shot: boolean;
 };
 
 export const readQueryFlags = (): QueryFlags => {
@@ -24,9 +30,15 @@ export const readQueryFlags = (): QueryFlags => {
   return {
     sample: params.get("sample") === "1",
     done: params.get("done") !== "0",
+    doneExplicit: params.get("done") === "1",
     first: params.get("first") === "1",
     picker: params.get("picker") === "1",
     orbshot: params.get("orbshot") === "1",
+    play: params.get("play") === "1",
+    morph: params.get("morph") === "1",
+    lean: params.get("lean") === "1",
+    settings: params.get("settings") === "1",
+    shot: params.get("shot") === "1",
   };
 };
 
@@ -40,8 +52,9 @@ export const useDew = () => {
   const [connecting, setConnecting] = useState(false);
 
   const sampleOn = settings.sampleLayout || browserSample;
-  const showConnect = flags.first || (!settings.onboarded && !sampleOn);
+  const showConnect = flags.first || (!settings.onboarded && !sampleOn && !flags.settings);
   const startInPicker = flags.picker;
+  const startInSettings = flags.settings;
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +62,7 @@ export const useDew = () => {
       try {
         const [nextSettings, nextSnapshot] = await Promise.all([getSettings(), getSnapshot()]);
         if (cancelled) return;
-        setSettings(nextSettings);
+        setSettings({ ...defaultSettings(), ...nextSettings });
         setSnapshot(nextSnapshot);
         setError(null);
       } catch (err) {
@@ -70,7 +83,7 @@ export const useDew = () => {
   }, []);
 
   const saveSettings = useCallback(async (next: Settings) => {
-    const saved = await persistSettings(next);
+    const saved = await persistSettings({ ...defaultSettings(), ...next });
     setSettings(saved);
     const nextSnapshot = await getSnapshot();
     setSnapshot(nextSnapshot);
@@ -86,7 +99,7 @@ export const useDew = () => {
       if (wait > 0) {
         await new Promise((resolve) => window.setTimeout(resolve, wait));
       }
-      setSettings(result.settings);
+      setSettings({ ...defaultSettings(), ...result.settings });
       setSnapshot(result.snapshot);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Scan failed.");
@@ -129,7 +142,10 @@ export const useDew = () => {
     sampleOn,
     showConnect,
     startInPicker,
+    startInSettings,
     orbshot: flags.orbshot,
+    play: flags.play,
+    flags,
     setBrowserSample,
     inTauri: isTauri(),
   };
