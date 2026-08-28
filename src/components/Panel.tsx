@@ -104,7 +104,7 @@ export const Panel = ({
     <section
       className={cn(
         "glass-card relative flex w-[848px] flex-col rounded-[28px] p-5 text-white",
-        overlay === "settings" ? "h-[400px]" : "h-[308px]",
+        overlay === "settings" ? "h-[470px]" : "h-[308px]",
       )}
       onMouseEnter={handlePointerEnter}
       onMouseLeave={handlePointerLeave}

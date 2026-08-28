@@ -23,6 +23,7 @@ export type QueryFlags = {
   lean: boolean;
   settings: boolean;
   shot: boolean;
+  demo: boolean;
 };
 
 export const readQueryFlags = (): QueryFlags => {
@@ -39,6 +40,7 @@ export const readQueryFlags = (): QueryFlags => {
     lean: params.get("lean") === "1",
     settings: params.get("settings") === "1",
     shot: params.get("shot") === "1",
+    demo: params.get("demo") === "1",
   };
 };
 

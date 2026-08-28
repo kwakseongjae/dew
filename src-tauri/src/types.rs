@@ -99,6 +99,8 @@ pub struct Settings {
     pub face: String,
     #[serde(default = "default_mint")]
     pub mint: String,
+    #[serde(default = "default_character")]
+    pub character: String,
 }
 
 fn default_true() -> bool {
@@ -115,6 +117,10 @@ fn default_face() -> String {
 
 fn default_mint() -> String {
     "pale".into()
+}
+
+fn default_character() -> String {
+    "drop".into()
 }
 
 impl Default for Settings {
@@ -134,6 +140,7 @@ impl Default for Settings {
             playfulness: default_playfulness(),
             face: default_face(),
             mint: default_mint(),
+            character: default_character(),
         }
     }
 }
@@ -157,6 +164,7 @@ mod tests {
         assert_eq!(settings.playfulness, "playful");
         assert_eq!(settings.face, "dots");
         assert_eq!(settings.mint, "pale");
+        assert_eq!(settings.character, "drop");
     }
 }
 

@@ -26,21 +26,22 @@ The Vite UI is pinned to **http://127.0.0.1:43133**. In a browser (no Tauri):
 pnpm dev
 ```
 
-Open `http://127.0.0.1:43133/?sample=1&shot=1` for a clearly labeled **sample layout** of the glass card (three Claude Code sessions as separate rows). Other preview flags:
+Open `http://127.0.0.1:43133/?demo=1` for the **real UI**: wallpaper, a **64px** dewdrop parked bottom-right, and the frost-glass card (sessions, tools, usage, settings). Add `&sample=1` for a labeled sample layout. Other flags:
 
+- `/?demo=1&sample=1` — desktop stage + sample sessions
+- `/?demo=1&done=1` — small orb frozen as the fused bang
+- `/?demo=1&settings=1` — settings, including the character row
 - `/?first=1&shot=1` — first-run Scan and connect
 - `/?sample=1&picker=1&shot=1` — followed-tools picker
-- `/?shot=1&settings=1` — settings, including the Dewdrop row
-- `/?orbshot=1&done=0` — live idle dewdrop (eyes + lean follow the pointer)
-- `/?orbshot=1&shot=1&done=0` — frozen idle lean pose for screenshots
-- `/?orbshot=1&play=1` — playground: pointer follow, roll, morph trigger
-- `/?orbshot=1&morph=1&shot=1` — mid-morph clay stretch (circle becoming !)
-- `/?orbshot=1&shot=1&done=1` or `/?sample=1&orbshot=1&shot=1` — settled bang
+- `/?orbshot=1&shot=1&done=0` — frozen 64px idle orb
+- `/?orbshot=1&shot=1&done=1` — frozen 64px bang
+- `/?orbshot=1&play=1` — **debug** playground (oversized blob, not the product)
 
-The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is a pale-mint frost drop with clay harmonics (not a perfect disc). Done interpolates a 32-point silhouette into a fused bang (capsule + dot, polynomial smooth-min) — the body morphs; nothing swaps in a glyph. `prefers-reduced-motion` skips spin/wobble and uses a short morph.
+The dewdrop is a **2D glass blob** (canvas + rAF), not a CSS circle with a text `!`. Idle is a clay pebble (pale mint frost, thin white rim). Done interpolates a 32-point silhouette into a fused bang (thin stem + pinch + rounder dot, polynomial smooth-min) — the body morphs; nothing swaps in a glyph. `prefers-reduced-motion` skips spin/wobble and uses a short morph.
 
 Settings → **Dewdrop** (saved like followed tools):
 
+- Character: drop (clay pebble) / plump (rounder, shorter) / tall (teardrop) — live previews; the same bang morphs that body
 - Look at cursor
 - Playfulness: off / calm / playful
 - Face: dots / sleepy / wink
