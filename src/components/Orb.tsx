@@ -7,7 +7,7 @@ import {
   startOrbDrag,
   togglePanel,
 } from "@/lib/bridge";
-import { lookFromSettings } from "@/lib/dewdrop";
+import { ORB_PX, lookFromSettings } from "@/lib/dewdrop";
 import { readQueryFlags } from "@/lib/useDew";
 import type { Settings, Snapshot } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -17,9 +17,20 @@ type OrbProps = {
   settings: Settings;
   onOpen?: () => void;
   onFocusDone?: (id: string) => void;
+  dragMode?: "tauri" | "stage" | "none";
+  onStageDrag?: (dx: number, dy: number) => void;
+  size?: number;
 };
 
-export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
+export const Orb = ({
+  snapshot,
+  settings,
+  onOpen,
+  onFocusDone,
+  dragMode = "tauri",
+  onStageDrag,
+  size = ORB_PX,
+}: OrbProps) => {
   const dragging = useRef(false);
   const start = useRef<{ x: number; y: number } | null>(null);
   const doneSessions = snapshot.groups
@@ -31,8 +42,7 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
   const freeze = flags.shot;
   const settledBang = Boolean(doneGroup) || flags.doneExplicit;
   const freezeMorph = flags.morph ? 0.56 : freeze ? (settledBang ? 1 : 0) : null;
-  const freezeLean =
-    flags.lean || (freeze && flags.orbshot && !flags.morph && !settledBang) ? { x: 0.42, y: -0.2 } : null;
+  const freezeLean = flags.lean ? { x: 0.42, y: -0.2 } : null;
   const morphTarget = settledBang ? 1 : 0;
 
   const handleOpen = () => {
@@ -42,7 +52,7 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
 
   const handlePointerEnter = () => {
     void notePointer("orb", true);
-    if (settings.openMode === "hover") {
+    if (settings.openMode === "hover" && !dragging.current) {
       handleOpen();
     }
   };
@@ -54,6 +64,9 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     dragging.current = false;
     start.current = { x: event.clientX, y: event.clientY };
+    if (dragMode === "stage") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLButtonElement>) => {
@@ -62,16 +75,23 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
     const dy = event.clientY - start.current.y;
     if (!dragging.current && Math.hypot(dx, dy) > 4) {
       dragging.current = true;
-      void startOrbDrag();
+      if (dragMode === "tauri") void startOrbDrag();
+    }
+    if (dragging.current && dragMode === "stage" && onStageDrag) {
+      onStageDrag(dx, dy);
+      start.current = { x: event.clientX, y: event.clientY };
     }
   };
 
   const handlePointerUp = () => {
-    if (dragging.current) {
+    if (dragging.current && dragMode === "tauri") {
       void readOrbPosition().then((pos) => {
         if (pos) void setOrbPosition(pos.x, pos.y);
       });
     }
+    window.setTimeout(() => {
+      dragging.current = false;
+    }, 0);
     start.current = null;
   };
 
@@ -108,14 +128,15 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       className={cn(
-        "relative grid size-[72px] place-items-center overflow-visible rounded-full bg-transparent outline-none",
+        "relative grid place-items-center overflow-visible rounded-full bg-transparent outline-none",
         "focus-visible:ring-2 focus-visible:ring-mint",
       )}
+      style={{ width: size, height: size }}
     >
       <Dewdrop
         look={lookFromSettings(settings)}
         mood={jobs > 0 ? "live" : "idle"}
-        size={72}
+        size={size}
         morphTarget={morphTarget}
         freezeMorph={freezeMorph}
         freezeLean={freezeLean}
