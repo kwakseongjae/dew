@@ -1,8 +1,17 @@
+import { Dewdrop } from "@/components/Dewdrop";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { hideOrb } from "@/lib/bridge";
-import type { DewdropFace, DewdropMint, DewdropPlayfulness } from "@/lib/dewdrop";
+import {
+  DEWDROP_CHARACTERS,
+  lookFromSettings,
+  type DewdropCharacter,
+  type DewdropFace,
+  type DewdropMint,
+  type DewdropPlayfulness,
+} from "@/lib/dewdrop";
 import type { Settings } from "@/lib/types";
+import { readQueryFlags } from "@/lib/useDew";
 
 type SettingsPaneProps = {
   settings: Settings;
@@ -75,9 +84,15 @@ export const SettingsPane = ({
     void onSave({ ...settings, mint });
   };
 
+  const handleCharacter = (character: DewdropCharacter) => {
+    void onSave({ ...settings, character });
+  };
+
   const handleHideOrb = () => {
     void hideOrb();
   };
+
+  const freezePreviews = readQueryFlags().shot;
 
   return (
     <div className="flex h-full min-h-0 flex-col text-white">
@@ -93,7 +108,36 @@ export const SettingsPane = ({
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
         <section className="rounded-2xl border border-white/15 bg-white/5 p-3">
           <p className="text-xs uppercase tracking-wide text-white/55">Dewdrop</p>
-          <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="mt-3 text-[11px] uppercase tracking-wide text-white/45">Character</p>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {DEWDROP_CHARACTERS.map((option) => {
+              const selected = settings.character === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-label={`${option.label} character`}
+                  aria-pressed={selected}
+                  tabIndex={0}
+                  onClick={() => handleCharacter(option.id)}
+                  className={
+                    selected
+                      ? "flex flex-col items-center gap-1 rounded-2xl border border-white/55 bg-white/15 px-2.5 py-2 outline-none focus-visible:ring-2 focus-visible:ring-mint"
+                      : "flex flex-col items-center gap-1 rounded-2xl border border-white/15 bg-white/5 px-2.5 py-2 outline-none focus-visible:ring-2 focus-visible:ring-mint"
+                  }
+                >
+                  <Dewdrop
+                    look={{ ...lookFromSettings(settings), character: option.id, playfulness: "calm" }}
+                    size={48}
+                    lookAtDocument={false}
+                    freeze={freezePreviews}
+                  />
+                  <span className="text-[11px] text-white/80">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm">Look at cursor</p>
               <p className="text-xs text-white/55">Eyes and lean follow the pointer.</p>
