@@ -21,10 +21,10 @@ export const DewdropPlayground = () => {
   return (
     <div className="sky-backdrop relative min-h-screen overflow-hidden text-white">
       <header className="absolute left-6 top-6 z-10 max-w-md">
-        <p className="text-sm font-medium">Dewdrop playground</p>
+        <p className="text-sm font-medium">Dewdrop playground (debug)</p>
         <p className="mt-1 text-xs text-white/70">
-          Move the pointer — the glass blob leans, looks, and spring-follows. This is the browser
-          stage, not a full-desktop pet. The real orb stays a small movable window.
+          Oversized motion sandbox — not the product. The real dewdrop is a 64px desktop orb. Open{" "}
+          <span className="text-white/90">/?demo=1</span> to see the tray icon and glass card.
         </p>
       </header>
       <Dewdrop

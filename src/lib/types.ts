@@ -72,6 +72,7 @@ export type Settings = {
   playfulness: "off" | "calm" | "playful";
   face: "dots" | "sleepy" | "wink";
   mint: "pale" | "mid";
+  character: "drop" | "plump" | "tall";
 };
 
 export type ConnectResult = {
@@ -94,6 +95,7 @@ export const defaultSettings = (): Settings => ({
   playfulness: "playful",
   face: "dots",
   mint: "pale",
+  character: "drop",
 });
 
 export const emptySnapshot = (): Snapshot => ({

@@ -51,7 +51,7 @@ const App = () => {
 
   if (params.get("play") === "1") return <DewdropPlayground />;
 
-  return <DesktopPreview shot={shot} />;
+  return <DesktopPreview shot={shot} demo={params.get("demo") === "1"} />;
 };
 
 export default App;
