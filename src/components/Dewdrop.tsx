@@ -225,8 +225,9 @@ export const Dewdrop = ({
         blink = 0;
       }
 
+      const idle = IDLE_RADII[lookNow.character] ?? IDLE_RADII.drop;
       const clay = !reduced;
-      const baseRadii = mixRadii(IDLE_RADII, BANG_RADII, morph.pos, clay);
+      const baseRadii = mixRadii(idle, BANG_RADII, morph.pos, clay);
       const radii =
         morph.pos < 0.2 && wobbleOn && !frozen
           ? baseRadii.map((radius, i) => {
