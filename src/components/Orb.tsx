@@ -32,7 +32,7 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
   const settledBang = Boolean(doneGroup) || flags.doneExplicit;
   const freezeMorph = flags.morph ? 0.56 : freeze ? (settledBang ? 1 : 0) : null;
   const freezeLean =
-    flags.lean || (freeze && flags.orbshot && !flags.morph && !settledBang) ? { x: 0.82, y: -0.36 } : null;
+    flags.lean || (freeze && flags.orbshot && !flags.morph && !settledBang) ? { x: 0.42, y: -0.2 } : null;
   const morphTarget = settledBang ? 1 : 0;
 
   const handleOpen = () => {
@@ -115,7 +115,7 @@ export const Orb = ({ snapshot, settings, onOpen, onFocusDone }: OrbProps) => {
       <Dewdrop
         look={lookFromSettings(settings)}
         mood={jobs > 0 ? "live" : "idle"}
-        size={68}
+        size={72}
         morphTarget={morphTarget}
         freezeMorph={freezeMorph}
         freezeLean={freezeLean}
