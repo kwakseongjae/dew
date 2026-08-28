@@ -89,9 +89,9 @@ export const idleSdf = (x: number, y: number): number => {
 
 /** Bang = tall capsule + fused dot, smin so the neck is clay, not a boolean cut. */
 export const bangSdf = (x: number, y: number): number => {
-  const stem = sdCapsule(x, y, 0, -0.7, 0, 0.12, 0.2);
-  const dot = sdCircle(x, y - 0.58, 0.2);
-  return smin(stem, dot, 0.11);
+  const stem = sdCapsule(x, y, 0, -0.74, 0, 0.02, 0.175);
+  const dot = sdCircle(x, y - 0.64, 0.175);
+  return smin(stem, dot, 0.068);
 };
 
 export const sampleRadii = (sdf: (x: number, y: number) => number, points = POINT_COUNT): number[] => {

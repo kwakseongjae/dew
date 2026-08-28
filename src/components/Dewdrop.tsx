@@ -230,9 +230,10 @@ export const Dewdrop = ({
       const maxR = radii.reduce((m, r) => Math.max(m, r), 0.72);
       const blobPx = Math.min(cssW, cssH);
       const pxPerUnit = (blobPx * 0.42) / maxR;
-      const twist = reduced ? 0 : Math.sin(morph.pos * Math.PI) * 0.42 + spin.pos;
-      const speedAngle = Math.atan2(leanY.vel, leanX.vel || 0.0001);
-      const squashAmt = squash.pos;
+      const leanTwist = morph.pos < 0.25 ? leanX.pos * 0.42 : 0;
+      const twist = reduced ? 0 : Math.sin(morph.pos * Math.PI) * 0.42 + spin.pos + leanTwist;
+      const speedAngle = Math.atan2(leanY.vel + leanY.pos, leanX.vel + leanX.pos || 0.0001);
+      const squashAmt = frozen && freezeLean ? 0.12 : squash.pos;
       const sx = 1 + Math.cos(speedAngle) * squashAmt - Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
       const sy = 1 - Math.cos(speedAngle) * squashAmt + Math.sin(elapsed / 900) * (wobbleOn && morph.pos < 0.15 ? 0.018 : 0);
 
@@ -245,8 +246,8 @@ export const Dewdrop = ({
         Object.assign(trailY, stepSpring(trailY, followY.pos, dt, 0.08, 0.72));
       }
 
-      const cx = cssW / 2 + (followRef.current ? followX.pos : leanX.pos * blobPx * 0.08);
-      const cy = cssH / 2 + (followRef.current ? followY.pos : leanY.pos * blobPx * 0.08);
+      const cx = cssW / 2 + (followRef.current ? followX.pos : leanX.pos * blobPx * 0.16);
+      const cy = cssH / 2 + (followRef.current ? followY.pos : leanY.pos * blobPx * 0.14);
 
       if (followRef.current && lookNow.playfulness === "playful" && !reduced) {
         ctx.globalAlpha = 0.28;
