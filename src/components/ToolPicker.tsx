@@ -85,8 +85,8 @@ export const ToolPicker = ({ tools, sampleOn, onToggle, onClose, onRescan }: Too
                   <p className="truncate text-[12px] text-white/60">
                     {tool.runningSessions > 0
                       ? `${tool.runningSessions} live session${tool.runningSessions === 1 ? "" : "s"}`
-                      : "installed \u00b7 no live session"}
-                    {tool.followed ? "" : " \u00b7 not followed"}
+                      : "installed · no live session"}
+                    {tool.followed ? "" : " · not followed"}
                   </p>
                 </button>
               </div>
